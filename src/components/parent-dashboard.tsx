@@ -1,19 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { useEffect, useMemo, useState } from "react";
 
-import type { Digest, Guardian, RiskSignal, Student, StudentEvent } from "@/lib/types";
 import { EventTimeline } from "@/components/event-timeline";
+import type {
+  Digest,
+  Guardian,
+  RiskSignal,
+  Student,
+  StudentEvent,
+} from "@/lib/types";
 
 interface ChartPoint {
   day: string;
@@ -26,7 +22,68 @@ interface ParentDashboardProps {
   guardianId?: string;
 }
 
-export function ParentDashboard({ guardianId = "guard-1" }: ParentDashboardProps) {
+function MiniSpark({
+  values,
+  color,
+}: {
+  values: number[];
+  color: string;
+}) {
+  const max = Math.max(1, ...values);
+  return (
+    <div className="mt-4 flex h-10 items-end gap-0.5" aria-hidden>
+      {values.map((v, i) => (
+        <div
+          key={i}
+          className="flex-1 rounded-sm opacity-80"
+          style={{
+            height: `${Math.max(8, (v / max) * 100)}%`,
+            backgroundColor: v > 0 ? color : "var(--border)",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function SignalTablet({
+  label,
+  value,
+  hint,
+  accent,
+  spark,
+  sparkColor,
+}: {
+  label: string;
+  value: number | string;
+  hint: string;
+  accent: string;
+  spark: number[];
+  sparkColor: string;
+}) {
+  return (
+    <article
+      className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_1px_0_rgba(31,41,51,0.04)]"
+      style={{ boxShadow: `inset 0 3px 0 ${accent}` }}
+    >
+      <p className="text-xs font-medium uppercase tracking-[0.16em] text-[var(--muted)]">
+        {label}
+      </p>
+      <p className="mt-3 text-4xl font-semibold tracking-tight text-[var(--ink)]">
+        {value}
+      </p>
+      <p className="mt-1 text-sm text-[var(--ink-soft)]">{hint}</p>
+      <MiniSpark values={spark} color={sparkColor} />
+      <p className="mt-2 text-[10px] uppercase tracking-wide text-[var(--muted)]">
+        Last 14 days
+      </p>
+    </article>
+  );
+}
+
+export function ParentDashboard({
+  guardianId = "guard-1",
+}: ParentDashboardProps) {
   const [guardian, setGuardian] = useState<Guardian | null>(null);
   const [children, setChildren] = useState<Student[]>([]);
   const [student, setStudent] = useState<Student | null>(null);
@@ -62,6 +119,17 @@ export function ParentDashboard({ guardianId = "guard-1" }: ParentDashboardProps
     void load();
   }, [guardianId]);
 
+  const totals = useMemo(() => {
+    return chart.reduce(
+      (acc, day) => ({
+        wins: acc.wins + day.wins,
+        concerns: acc.concerns + day.concerns,
+        attendance: acc.attendance + day.attendance,
+      }),
+      { wins: 0, concerns: 0, attendance: 0 },
+    );
+  }, [chart]);
+
   async function askChat(e: React.FormEvent) {
     e.preventDefault();
     if (!student || !question.trim()) return;
@@ -92,6 +160,13 @@ export function ParentDashboard({ guardianId = "guard-1" }: ParentDashboardProps
   if (!student) {
     return <p className="text-sm text-[var(--muted)]">Loading parent view…</p>;
   }
+
+  const attentionAccent =
+    risk?.level === "elevated"
+      ? "#e11d48"
+      : risk?.level === "watch"
+        ? "#d97706"
+        : "#0f766e";
 
   return (
     <div className="space-y-8">
@@ -130,34 +205,65 @@ export function ParentDashboard({ guardianId = "guard-1" }: ParentDashboardProps
         </div>
       </header>
 
-      {risk ? (
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
-          <p className="text-sm text-[var(--muted)]">Attention level</p>
-          <p className="text-2xl text-[var(--ink)] capitalize">
-            {risk.level}{" "}
-            <span className="text-base text-[var(--muted)]">
-              score {risk.score}
-            </span>
-          </p>
-          <p className="mt-1 text-sm text-[var(--ink-soft)]">{risk.reasons[0]}</p>
+      <section>
+        <div className="mb-4 flex items-end justify-between gap-3">
+          <div>
+            <h2 className="text-xl text-[var(--ink)]">Two-week snapshot</h2>
+            <p className="text-sm text-[var(--muted)]">
+              Each tablet is one signal type — not one crowded chart
+            </p>
+          </div>
         </div>
-      ) : null}
 
-      <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
-        <h2 className="mb-4 text-xl text-[var(--ink)]">Two-week signals</h2>
-        <div className="h-64 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chart}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e7dfd1" />
-              <XAxis dataKey="day" tick={{ fontSize: 11 }} />
-              <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="wins" fill="#0f766e" name="Wins" />
-              <Bar dataKey="concerns" fill="#d97706" name="Concerns" />
-              <Bar dataKey="attendance" fill="#64748b" name="Attendance" />
-            </BarChart>
-          </ResponsiveContainer>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <SignalTablet
+            label="Attention"
+            value={risk ? risk.level : "—"}
+            hint={
+              risk
+                ? `Score ${risk.score} · ${risk.reasons[0]}`
+                : "No risk score yet"
+            }
+            accent={attentionAccent}
+            spark={risk?.sparkline.map((v) => Math.abs(v)) ?? chart.map(() => 0)}
+            sparkColor={attentionAccent}
+          />
+          <SignalTablet
+            label="Wins"
+            value={totals.wins}
+            hint={
+              totals.wins === 0
+                ? "No positive signals logged"
+                : "Positive moments from class"
+            }
+            accent="#0f766e"
+            spark={chart.map((d) => d.wins)}
+            sparkColor="#0f766e"
+          />
+          <SignalTablet
+            label="Concerns"
+            value={totals.concerns}
+            hint={
+              totals.concerns === 0
+                ? "No concerns this window"
+                : "Areas teachers flagged"
+            }
+            accent="#d97706"
+            spark={chart.map((d) => d.concerns)}
+            sparkColor="#d97706"
+          />
+          <SignalTablet
+            label="Attendance"
+            value={totals.attendance}
+            hint={
+              totals.attendance === 0
+                ? "No attendance notes"
+                : "Late / absent notes logged"
+            }
+            accent="#64748b"
+            spark={chart.map((d) => d.attendance)}
+            sparkColor="#64748b"
+          />
         </div>
       </section>
 
