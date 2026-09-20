@@ -7,21 +7,26 @@ export default function HomePage() {
         Helis
       </p>
       <h1 className="mt-3 max-w-3xl text-5xl leading-tight text-[var(--ink)]">
-        Classroom signals, bilingual digests, delivered where parents already
-        are.
+        One-tap classroom rituals. Parent WhatsApp without the typing.
       </h1>
       <p className="mt-5 max-w-2xl text-lg text-[var(--ink-soft)]">
-        Teachers log tiny updates in under ten seconds. Helis drafts English and
-        Hindi summaries, surfaces early warnings, powers group project Kanbans,
-        and pushes parent updates to WhatsApp.
+        Built for Indian schools where teachers have a phone, not a desk PC.
+        Homework check, volunteer, late — tap once, Helis logs it and can notify
+        parents.
       </p>
 
       <div className="mt-10 flex flex-wrap gap-4">
         <Link
-          href="/teacher"
+          href="/teacher/mobile"
           className="rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-medium text-white"
         >
-          Teacher demo
+          Open teacher phone app
+        </Link>
+        <Link
+          href="/teacher"
+          className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-6 py-3 text-sm"
+        >
+          Desktop teacher
         </Link>
         <Link
           href="/parent"
@@ -29,39 +34,33 @@ export default function HomePage() {
         >
           Parent demo
         </Link>
-        <Link
-          href="/teacher/projects/proj-1"
-          className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-6 py-3 text-sm"
-        >
-          Group Kanbans
-        </Link>
       </div>
 
       <section className="mt-16 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {[
           {
-            title: "Log → Push",
-            body: "Events become bilingual WhatsApp digests with consent gate.",
+            title: "Phone rituals",
+            body: "Template chips + homework roll-call — no typing mid-period.",
           },
           {
-            title: "Pulse",
-            body: "Deterministic early-warning ranks who needs attention before report cards.",
+            title: "Volunteer → WhatsApp",
+            body: "One tap logs a win and messages the parent (consent gated).",
           },
           {
-            title: "Group Kanbans",
-            body: "One board per group; teacher sees all; card moves feed the event stream.",
+            title: "Class events",
+            body: "Name + duration → every student record populated; mark volunteers.",
           },
           {
-            title: "Parent home",
-            body: "Charts, timeline, and grounded chat for their child only.",
+            title: "Installable PWA",
+            body: "Add Helis to the phone home screen — works like an app.",
           },
           {
-            title: "Reply drafts",
-            body: "Teachers insert AI drafts grounded in recent classroom signals.",
+            title: "Digests & Pulse",
+            body: "Desktop view still has bilingual digests, Pulse, Kanban, chat.",
           },
           {
             title: "ERP add-on",
-            body: "Sits on top of existing school systems — not a rip-and-replace SIS.",
+            body: "Layer on top of existing school systems — not a full SIS.",
           },
         ].map((item) => (
           <article

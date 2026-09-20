@@ -15,23 +15,34 @@ export interface WhatsAppSendResult {
   log: string;
 }
 
-export async function sendDigestWhatsApp(
-  input: WhatsAppSendInput,
+export interface RitualWhatsAppInput {
+  to: string;
+  studentName: string;
+  bodyEn: string;
+  bodyHi: string;
+  preferredLanguage: "en" | "hi";
+}
+
+function buildBilingualBody(
+  preferredLanguage: "en" | "hi",
+  studentName: string,
+  primary: string,
+  secondary: string,
+) {
+  return `Helis · ${studentName}\n\n${preferredLanguage === "hi" ? primary : secondary}\n\n—\n${preferredLanguage === "hi" ? secondary : primary}`;
+}
+
+async function dispatchWhatsApp(
+  to: string,
+  body: string,
 ): Promise<WhatsAppSendResult> {
-  const primary =
-    input.preferredLanguage === "hi" ? input.summaryHi : input.summaryEn;
-  const secondary =
-    input.preferredLanguage === "hi" ? input.summaryEn : input.summaryHi;
-
-  const body = `Helis update for ${input.studentName}\n\n${primary}\n\n—\n${secondary}`;
-
   if (isWhatsAppMock()) {
-    console.log("[Helis WhatsApp MOCK]", { to: input.to, body });
+    console.log("[Helis WhatsApp MOCK]", { to, body });
     return {
       success: true,
       mock: true,
       messageId: `mock-${Date.now()}`,
-      log: `Mock WhatsApp sent to ${input.to}`,
+      log: `Mock WhatsApp sent to ${to}`,
     };
   }
 
@@ -45,7 +56,7 @@ export async function sendDigestWhatsApp(
       },
       body: JSON.stringify({
         messaging_product: "whatsapp",
-        to: input.to.replace(/\D/g, ""),
+        to: to.replace(/\D/g, ""),
         type: "text",
         text: { body },
       }),
@@ -69,6 +80,31 @@ export async function sendDigestWhatsApp(
     success: true,
     mock: false,
     messageId: payload.messages?.[0]?.id,
-    log: `WhatsApp sent to ${input.to}`,
+    log: `WhatsApp sent to ${to}`,
   };
+}
+
+export async function sendDigestWhatsApp(
+  input: WhatsAppSendInput,
+): Promise<WhatsAppSendResult> {
+  const body = buildBilingualBody(
+    input.preferredLanguage,
+    input.studentName,
+    input.summaryHi,
+    input.summaryEn,
+  );
+  return dispatchWhatsApp(input.to, body);
+}
+
+/** Short one-tap ritual message (homework miss, volunteer, etc.) */
+export async function sendRitualWhatsApp(
+  input: RitualWhatsAppInput,
+): Promise<WhatsAppSendResult> {
+  const body = buildBilingualBody(
+    input.preferredLanguage,
+    input.studentName,
+    input.bodyHi,
+    input.bodyEn,
+  );
+  return dispatchWhatsApp(input.to, body);
 }

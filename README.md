@@ -1,9 +1,9 @@
 # Helis
 
-K–12 classroom signal platform.
+K–12 classroom signal platform for Indian schools — **phone-first for teachers**, WhatsApp for parents.
 
-**MVP-0:** teachers log events → bilingual digests → WhatsApp (consent gate)  
-**Phase 2:** Class Pulse, group project Kanbans, parent dashboard + grounded chat, teacher reply drafts
+**Teacher phone app (PWA):** one-tap templates, homework roll-call, class events, volunteer → WhatsApp  
+**Desktop:** digests, Pulse, Kanban, parent chat / reply drafts
 
 Runs in **demo mode** out of the box (in-memory seed data, mock WhatsApp).
 
@@ -18,49 +18,47 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+### Install on phone (mobile app)
+
+1. Start the server reachable on your Wi‑Fi (`npm run dev` already binds `0.0.0.0`)
+2. On the phone browser open `http://<your-laptop-ip>:3000/teacher/mobile`
+3. **Android Chrome:** Menu → Add to Home screen  
+   **iPhone Safari:** Share → Add to Home Screen  
+4. Helis opens full-screen like an app (PWA)
+
 ## Demo paths
 
 | Path | What to try |
 |------|-------------|
-| `/teacher` → Grade 5A | Log events, digests, Pulse / Projects / Inbox tabs |
-| `/teacher/projects/proj-1` | All-groups Kanban overview |
-| `/teacher/boards/board-a` | Drag cards; Done → emits StudentEvent |
-| `/student/boards/board-a?as=stu-1` | Student sees own group only |
-| `/parent` | Charts, timeline, ask grounded chat (Rajesh / Arjun) |
+| `/teacher/mobile` | **Phone app** — pick class → Quick tap / Homework / Event |
+| `/teacher/mobile/class-5a` | Homework check: Done vs Missing→WA; Volunteer chip |
+| `/teacher` → Grade 5A | Desktop digests, Pulse, Projects, Inbox |
+| `/parent` | Parent tablets + grounded chat |
 
-### MVP-0 walkthrough
+### Phone ritual walkthrough
 
-1. Log an event for Arjun → Generate digest → Approve → Send WhatsApp (mock)
-2. Try Rohan for send — blocked without ConsentRecord
-
-### Phase 2 walkthrough
-
-1. **Pulse** tab — Rohan should rank elevated (attendance + homework concerns)
-2. **Projects** → Science Fair overview → open Group A board → drag "Build prototype" or mark overdue cards
-3. **Parent** → ask *"How has homework been this week?"* — cites events; refuse out-of-scope questions
-4. **Inbox** tab — open Arjun thread → **AI draft reply** → insert → send
+1. Open `/teacher/mobile` → Grade 5A  
+2. **Quick tap** — select Arjun → **Volunteered** (mock WhatsApp if consent on file)  
+3. **Homework** — call names → **Missing → WA** or **Done / OK**  
+4. **Event** — title + duration → tick volunteers → save (all students get records)
 
 ## Environment
 
 | Variable | Required | Purpose |
 |----------|----------|---------|
 | `OPENAI_API_KEY` | Optional | Real AI digests/chat; template fallback if missing |
-| `WHATSAPP_*` | Optional | Real WhatsApp; mock if missing |
+| `WHATSAPP_*` | Optional | Real WhatsApp; mock if missing / `WHATSAPP_MOCK=true` |
 | `NEXT_PUBLIC_SUPABASE_*` | Later | Replace demo store with Postgres |
 
 ## Structure
 
 ```
 src/
-  app/
-    api/events|digest|pulse|projects|kanban|chat|parent/
-    teacher/  parent/  student/
-  components/  # composer, pulse, kanban, parent dashboard, inbox
-  lib/
-    demo-store.ts
-    pulse/score.ts
-    ai/  whatsapp/  offline/
-supabase/schema.sql  # MVP-0 + Phase 2 tables
+  app/teacher/mobile/     # Phone PWA entry
+  app/api/rituals/        # Template tap + class event
+  lib/rituals/templates.ts
+  components/mobile-ritual.tsx
+public/manifest.webmanifest + sw.js + icons/
 ```
 
 ## License

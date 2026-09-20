@@ -14,8 +14,15 @@ export default function TeacherHomePage() {
         </p>
         <h1 className="mt-2 text-4xl text-[var(--ink)]">{school.name}</h1>
         <p className="mt-2 text-[var(--muted)]">
-          Pick a class to log signals and send bilingual WhatsApp digests.
+          Prefer the phone app for mid-class taps — desktop is for digests &
+          Pulse.
         </p>
+        <Link
+          href="/teacher/mobile"
+          className="mt-4 inline-flex rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white"
+        >
+          Open phone app
+        </Link>
       </header>
 
       <div className="grid gap-4">
